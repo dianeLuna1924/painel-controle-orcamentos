@@ -236,15 +236,19 @@
         function carregarDadosAutomaticos() {
             const statusBox = document.getElementById('statusAutoLoad');
             
-            // Tenta carregar a planilha oficial via fetch
-            fetch('./Base_Orcamentos.xlsx?t=' + new Date().getTime())
+            // Gera um parâmetro único baseado no timestamp atual para evitar cache do navegador
+            const antiCache = '?v=' + new Date().getTime();
+            
+            // 1. Tenta carregar localmente na pasta com o parâmetro anti-cache
+            fetch('./Base_Orcamentos.xlsx' + antiCache)
                 .then(res => {
                     if (!res.ok) throw new Error();
                     return res.arrayBuffer();
                 })
                 .then(buffer => processarBuffer(buffer))
                 .catch(() => {
-                    fetch('https://raw.githubusercontent.com/dianeLuna1924/painel-controle-orcamentos/main/Base_Orcamentos.xlsx?t=' + new Date().getTime())
+                    // 2. Se falhar, busca no GitHub Raw com o parâmetro anti-cache
+                    fetch('https://raw.githubusercontent.com/dianeLuna1924/painel-controle-orcamentos/main/Base_Orcamentos.xlsx' + antiCache)
                         .then(r => {
                             if (!r.ok) throw new Error();
                             return r.arrayBuffer();
