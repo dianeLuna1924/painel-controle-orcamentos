@@ -440,8 +440,9 @@
             });
 
             const taxaConversao = totalItens > 0 ? ((cntAprov / totalItens) * 100).toFixed(1) : 0;
+            const ticketMedioCalculado = totalItens > 0 ? (somaColunaR / totalItens) : 0;
 
-            document.getElementById('kpiTicketMedio').innerText = fmtMoeda(somaColunaR);
+            document.getElementById('kpiTicketMedio').innerText = fmtMoeda(ticketMedioCalculado);
             document.getElementById('kpiSomaTotalGeral').innerText = fmtMoeda(somaTotalColunaQ);
             document.getElementById('kpiNegociacao').innerText = fmtMoeda(valorNegociacao);
             document.getElementById('kpiAprovado').innerText = fmtMoeda(valorAprovadoEfetivo);
@@ -529,14 +530,18 @@
 
             const vendSummary = {};
             dados.forEach(d => {
-                if (!vendSummary[d.vendedor]) vendSummary[d.vendedor] = { qtd: 0, ticketMedio: 0 };
+                if (!vendSummary[d.vendedor]) vendSummary[d.vendedor] = { qtd: 0, somaTicket: 0 };
                 vendSummary[d.vendedor].qtd += 1;
-                vendSummary[d.vendedor].ticketMedio += d.valorColunaR;
+                vendSummary[d.vendedor].somaTicket += d.valorColunaR;
             });
 
-            const vendedores = Object.keys(vendSummary).sort((a,b) => vendSummary[b].ticketMedio - vendSummary[a].ticketMedio);
+            const vendedores = Object.keys(vendSummary).sort((a,b) => {
+                const mediaB = vendSummary[b].qtd > 0 ? (vendSummary[b].somaTicket / vendSummary[b].qtd) : 0;
+                const mediaA = vendSummary[a].qtd > 0 ? (vendSummary[a].somaTicket / vendSummary[a].qtd) : 0;
+                return mediaB - mediaA;
+            });
             const arrayQtd = vendedores.map(v => vendSummary[v].qtd);
-            const arrayTicket = vendedores.map(v => vendSummary[v].ticketMedio);
+            const arrayTicket = vendedores.map(v => vendSummary[v].qtd > 0 ? (vendSummary[v].somaTicket / vendSummary[v].qtd) : 0);
 
             if (chartQtdVendedorInstance) chartQtdVendedorInstance.destroy();
             chartQtdVendedorInstance = new Chart(document.getElementById('chartQtdVendedor'), {
@@ -544,7 +549,7 @@
                 data: {
                     labels: vendedores,
                     datasets: [
-                        { label: 'Soma Ticket Médio (R$)', data: arrayTicket, backgroundColor: 'rgba(99, 102, 241, 0.85)', borderColor: '#6366f1', borderWidth: 1, yAxisID: 'yTicket', order: 2 },
+                        { label: 'Ticket Médio (R$)', data: arrayTicket, backgroundColor: 'rgba(99, 102, 241, 0.85)', borderColor: '#6366f1', borderWidth: 1, yAxisID: 'yTicket', order: 2 },
                         { label: 'Qtd de Orçamentos', data: arrayQtd, type: 'line', borderColor: '#f59e0b', backgroundColor: '#f59e0b', pointRadius: 4, fill: false, yAxisID: 'yQtd', order: 1 }
                     ]
                 },
